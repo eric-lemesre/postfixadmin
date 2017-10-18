@@ -23,17 +23,20 @@
  *
  *  fUsername
  *  fPassword
+ *  token
  *  lang
  */
 
 $rel_path = '../';
-define('POSTFIXADMIN_LOGOUT', 1);
 require_once("../common.php");
 
 check_db_version(); # check if the database layout is up to date (and error out if not)
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+
+   if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
    $lang = safepost('lang');
    $fUsername = trim(safepost('fUsername'));
    $fPassword = safepost('fPassword');
@@ -45,12 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST")
 
    $h = new MailboxHandler();
    if($h->login($fUsername, $fPassword)) {
-      session_regenerate_id();
-      $_SESSION['sessid'] = array();
-      $_SESSION['sessid']['roles'] = array();
-      $_SESSION['sessid']['roles'][] = 'user';
-      $_SESSION['sessid']['username'] = $fUsername;
-      $_SESSION['PFA_token'] = md5(uniqid(rand(), true));
+
+      init_session($fUsername, false);
+
       header("Location: main.php");
       exit;
    } else {   
@@ -59,9 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST")
    }
 }
 
+$_SESSION['PFA_token'] = md5(uniqid(rand(), true));
+
 $smarty->assign ('language_selector', language_selector(), false);
 $smarty->assign ('smarty_template', 'login');
 $smarty->assign ('logintype', 'user');
+$smarty->assign ('forgotten_password_reset', Config::read('forgotten_user_password_reset'));
 $smarty->display ('index.tpl');
 
 /* vim: set expandtab softtabstop=3 tabstop=3 shiftwidth=3: */

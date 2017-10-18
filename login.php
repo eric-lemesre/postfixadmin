@@ -23,10 +23,10 @@
  *
  *  fUsername
  *  fPassword
+ *  token
  *  lang
  */
 
-define('POSTFIXADMIN_LOGOUT', 1);
 require_once('common.php');
 
 if($CONF['configured'] !== true) {
@@ -38,6 +38,9 @@ check_db_version(); # check if the database layout is up to date (and error out 
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+
+    if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
     $lang = safepost('lang');
     $fUsername = trim(safepost('fUsername'));
     $fPassword = safepost('fPassword');
@@ -49,13 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST")
 
     $h = new AdminHandler;
     if ( $h->login($fUsername, $fPassword) ) {
-        session_regenerate_id();
-        $_SESSION['sessid'] = array();
-        $_SESSION['sessid']['roles'] = array();
-        $_SESSION['sessid']['roles'][] = 'admin';
-        $_SESSION['sessid']['username'] = $fUsername;
 
-        $_SESSION['PFA_token'] = md5(uniqid(rand(), true));
+        init_session($fUsername, true);
 
         # they've logged in, so see if they are a domain admin, as well.
 
@@ -82,9 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST")
     }
 }
 
+$_SESSION['PFA_token'] = md5(uniqid(rand(), true));
+
 $smarty->assign ('language_selector', language_selector(), false);
 $smarty->assign ('smarty_template', 'login');
 $smarty->assign ('logintype', 'admin');
+$smarty->assign ('forgotten_password_reset', Config::read('forgotten_admin_password_reset'));
 $smarty->display ('index.tpl');
 
 /* vim: set expandtab softtabstop=4 tabstop=4 shiftwidth=4: */

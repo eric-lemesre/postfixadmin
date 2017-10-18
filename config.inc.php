@@ -86,11 +86,17 @@ $CONF['database_host'] = 'localhost';
 $CONF['database_user'] = 'postfix';
 $CONF['database_password'] = 'postfixadmin';
 $CONF['database_name'] = 'postfix';
+
 // If you need to specify a different port for a MYSQL database connection, use e.g.
 //   $CONF['database_host'] = '172.30.33.66:3308';
-// If you need to specify a different port for POSTGRESQL database connection
+//
+// If you need to specify a different port for MySQLi(3306)/POSTGRESQL(5432) database connection
 //   uncomment and change the following
 // $CONF['database_port'] = '5432';
+//
+// If you wish to connect using a local socket file (e.g /var/run/mysql.sock) uncomment the below.
+// $CONF['database_socket'] = '/var/run/mysql/mysqld.sock';
+//
 // If sqlite is used, specify the database file path:
 //   $CONF['database_name'] = '/etc/postfix/sqlite/postfixadmin.db'
 
@@ -118,6 +124,10 @@ $CONF['database_tables'] = array (
 // from Send Email / Broadcast message pages.
 // Leave blank to send email from the logged-in Admin's Email address.
 $CONF['admin_email'] = '';
+
+// Site admin name
+// This will be used as signature in notification messages
+$CONF['admin_name'] = 'Postmaster';
 
 // Mail Server
 // Hostname (FQDN) of your mail server.
@@ -598,6 +608,36 @@ $CONF['new_quota_table'] = 'YES';
 // http://www.php.net/manual/en/function.imap-open.php
 $CONF['create_mailbox_subdirs_hostoptions'] = array();
 
+// Optional:
+// Allows a user to reset his forgotten password with a code sent by email/SMS
+$CONF['forgotten_user_password_reset'] = true;
+// Allows an admin to reset his forgotten password with a code sent by email/SMS
+$CONF['forgotten_admin_password_reset'] = false;
+
+// Name of the function to send a SMS
+// Please use a name that begins with "x_" to prevent collisions
+// This function must accept 2 parameters: phone number and message,
+// and return true on success or false on failure
+$CONF['sms_send_function'] = '';
+
+/*
+// Example of send SMS function using Clickatell HTTP API
+function x_send_sms_clickatell($to, $message) {
+
+    $clickatell_api_id = 'CHANGEME';
+    $clickatell_user = 'CHANGEME';
+    $clickatell_password = 'CHANGEME';
+    $clickatell_sender = 'CHANGEME';
+
+    $url = 'https://api.clickatell.com/http/sendmsg?api_id=%s&user=%s&password=%s&to=%s&from=%s&text=%s';
+
+    $url = sprintf($url, $clickatell_api_id, $clickatell_user, $clickatell_password, $to, $clickatell_sender, urlencode($message));
+
+    $result = file_get_contents($url);
+
+    return $result !== false;
+}
+*/
 
 // Theme Config
 // Specify your own logo and CSS file

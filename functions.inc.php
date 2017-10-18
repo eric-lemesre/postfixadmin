@@ -16,7 +16,7 @@
  */
 
 $version = '3.1';
-$min_db_version = 1836;  # update (at least) before a release with the latest function numbrer in upgrade.php
+$min_db_version = 1837;  # update (at least) before a release with the latest function numbrer in upgrade.php
 
 /**
  * check_session
@@ -89,6 +89,23 @@ function authentication_require_role($role) {
     exit(0);
 }
 
+/**
+ * Initialize a user or admin session
+ *
+ * @param String $username the user or admin name
+ * @param boolean $is_admin true if the user is an admin, false otherwise
+ * @return boolean true on success
+ */
+function init_session($username, $is_admin = false) {
+    $status = session_regenerate_id(true);
+    $_SESSION['sessid'] = array();
+    $_SESSION['sessid']['roles'] = array();
+    $_SESSION['sessid']['roles'][] = $is_admin ? 'admin' : 'user';
+    $_SESSION['sessid']['username'] = $username;
+    $_SESSION['PFA_token'] = md5(uniqid(rand(), true));
+
+    return $status;
+}
 
 /**
  * Add an error message for display on the next page that is rendered.
@@ -806,7 +823,7 @@ function encode_header ($string, $default_charset = "utf-8") {
 //
 function generate_password () {
     // length of the generated password
-    $length = 8;
+    $length = 12;
 
     // define possible characters
     $possible = "2345678923456789abcdefghijkmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ"; # skip 0 and 1 to avoid confusion with O and l
@@ -1271,14 +1288,17 @@ function db_connect ($ignore_errors = false) {
         }
     } elseif ($CONF['database_type'] == "mysqli") {
         if (function_exists ("mysqli_connect")) {
-            $link = @mysqli_connect ($CONF['database_host'], $CONF['database_user'], $CONF['database_password']) or $error_text .= ("<p />DEBUG INFORMATION:<br />Connect: " .  mysqli_connect_error () . "$DEBUG_TEXT");
+
+            $CONF['database_socket'] = isset($CONF['database_socket']) ? $CONF['database_socket'] : ini_get('mysqli.default_socket');
+            $CONF['database_port'] = isset($CONF['database_port']) ? $CONF['database_socket'] : ini_get('mysqli.default_port');
+
+            $link = @mysqli_connect ($CONF['database_host'], $CONF['database_user'], $CONF['database_password'], $CONF['database_name'], $CONF['database_port'], $CONF['database_socket']) or $error_text .= ("<p />DEBUG INFORMATION:<br />Connect: " .  mysqli_connect_error () . "$DEBUG_TEXT");
             if ($link) {
                 @mysqli_query($link,"SET CHARACTER SET utf8");
                 @mysqli_query($link,"SET COLLATION_CONNECTION='utf8_general_ci'");
-                @mysqli_select_db ($link, $CONF['database_name']) or $error_text .= ("<p />DEBUG INFORMATION:<br />MySQLi Select Database: " .  mysqli_error ($link) . "$DEBUG_TEXT");
             }
         } else {
-            $error_text .= "<p />DEBUG INFORMATION:<br />MySQL 4.1 functions not available! (php5-mysqli installed?)<br />database_type = 'mysqli' in config.inc.php, are you using a different database? $DEBUG_TEXT";
+            $error_text .= "<p />DEBUG INFORMATION:<br />MySQLi functions not available! (php5-mysqli installed?)<br />database_type = 'mysqli' in config.inc.php, are you using a different database? $DEBUG_TEXT";
         }
     } elseif (db_sqlite()) {
         if (class_exists ("SQLite3")) {
