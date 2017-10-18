@@ -14,6 +14,9 @@ abstract class PFAHandler {
     # array of tasks available in CLI
     public $taskNames = array('Help', 'Add', 'Update', 'Delete', 'View', 'Scheme');
 
+    # array of action available on hook
+    public $actionNames = array('create', 'delete', 'change', 'changePassword');
+
     /**
      * variables that must be defined in all *Handler classes
      */
@@ -513,6 +516,14 @@ abstract class PFAHandler {
         if ($result != 1) {
             $this->errormsg[] = Config::lang_f($this->msg['store_error'], $this->label);
             return false;
+        }
+
+        # execute function hook if it exist
+        foreach ( $this->actionNames as $action ) {
+            $actionsHook = Config::read($this->db_table . '_' . $action . '_hook');
+            if ( $actionsHook != 'NO' && $actionsHook != '' && function_exists($actionsHook) ) {
+                $actionsHook($this->values,$this->username);
+            }
         }
 
         $result = $this->storemore();

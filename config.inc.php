@@ -288,6 +288,32 @@ $CONF['mailbox_struct_hook']        = '';
 $CONF['alias_domain_struct_hook']   = '';
 $CONF['fetchmail_struct_hook']      = '';
 
+/*
+ * Hooks for actions in table
+ * list of action (see $actionNames in PFAHandler)
+ * is  'create', 'delete', 'change', 'changePassword'
+ * $CONF['<db_table>_<action>_hook'] =
+ *
+    Example:
+
+function x_mailbox_create_hook($db_value, $admin_user) {
+    $fTo = smtp_get_admin_email();
+   if(empty($fTo) || $fTo == 'CLI') $fTo = $db_value->username;
+    $fFrom = smtp_get_admin_email();
+    if(empty($fFrom) || $fFrom == 'CLI') $fFrom = $db_value->username;
+    $fSubject = "[Courriel:Creation] Creation of $db_value->username";
+    $fBody  = "New mail creation by ".$admin_user."\n";
+    $fBody .= "New mail ".$db_value->username." with name ";
+    $fBody .= $db_value->name." for domain ".$db_value->domain."\n";
+
+    if (!smtp_mail ($fTo, $fFrom, $fSubject, $fBody)) {
+        $this->errormsg[] = Config::lang_f('pSendmail_result_error', $MailboxHandler->id);
+    }
+} */
+$CONF['mailbox_create_hook']            = '';
+$CONF['mailbox_delete_hook']            = '';
+$CONF['mailbox_change_hook']            = '';
+$CONF['mailbox_changePassword_hook']    = '';
 
 // Default Domain Values
 // Specify your default values below. Quota in MB.
