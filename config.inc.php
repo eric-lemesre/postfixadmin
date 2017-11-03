@@ -306,20 +306,30 @@ $CONF['fetchmail_struct_hook']      = '';
  *
     Example:
 
-function x_mailbox_create_hook($db_value, $admin_user) {
+function x_mailbox_action_hook($action, $user_id, $user_domain, $admin_user) {
     $fTo = smtp_get_admin_email();
-   if(empty($fTo) || $fTo == 'CLI') $fTo = $db_value->username;
     $fFrom = smtp_get_admin_email();
-    if(empty($fFrom) || $fFrom == 'CLI') $fFrom = $db_value->username;
-    $fSubject = "[Courriel:Creation] Creation of $db_value->username";
-    $fBody  = "New mail creation by ".$admin_user."\n";
-    $fBody .= "New mail ".$db_value->username." with name ";
-    $fBody .= $db_value->name." for domain ".$db_value->domain."\n";
-
-    if (!smtp_mail ($fTo, $fFrom, $fSubject, $fBody)) {
-        $this->errormsg[] = Config::lang_f('pSendmail_result_error', $MailboxHandler->id);
+    if(empty($fFrom) || $fFrom == 'CLI') $fFrom = $user_id;
+    $fSubject = '[Courriel] '.$action.' '.$user_id;
+    switch ($action) {
+        case 'create':
+            $fBody = 'New mail on '.$user_domain.":\n";
+            break;
+        case 'delete':
+            $fBody = 'Delete mail on '.$user_domain.":\n";
+            break;
+        case 'change':
+            $fBody = 'Change about mail on '.$user_domain.":\n";
+            break;
+        case 'changePassword':
+            $fBody = 'Change password for mail on '.$user_domain.":\n";
+            break;
     }
-} */
+    $fBody .= "\tfor ".$user_id.' made by '.$admin_user."\n";
+
+    smtp_mail ($fTo, $fFrom, $fSubject, $fBody);
+}}
+*/
 $CONF['mailbox_create_hook']            = '';
 $CONF['mailbox_delete_hook']            = '';
 $CONF['mailbox_change_hook']            = '';

@@ -519,10 +519,15 @@ abstract class PFAHandler {
         }
 
         # execute function hook if it exist
-        foreach ( $this->actionNames as $action ) {
-            $actionsHook = Config::read($this->db_table . '_' . $action . '_hook');
-            if ( $actionsHook != 'NO' && $actionsHook != '' && function_exists($actionsHook) ) {
-                $actionsHook($this->values,$this->username);
+        $creationHook = Config::read($this->db_table . '_create_hook');
+        if ($this->new) {
+            if ($creationHook != 'NO' && $creationHook != '' && function_exists($creationHook) ) {
+                $creationHook('creation', $this->id, $this->domain, $this->admin_username);
+            }
+        } else {
+            $changeHook = Config::read($this->db_table . '_change_hook');
+            if ($changeHook != 'NO' && $changeHook != '' && function_exists($changeHook) ) {
+                $changeHook('change', $this->id, $this->domain, $this->admin_username);
             }
         }
 

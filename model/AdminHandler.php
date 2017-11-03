@@ -190,6 +190,12 @@ class AdminHandler extends PFAHandler {
         db_delete('domain_admins', $this->id_field, $this->id);
         db_delete($this->db_table, $this->id_field, $this->id);
 
+        # delete hook if it exists
+        $deleteHook = Config::read($this->db_table . '_delete_hook');
+        if ($deleteHook != 'NO' && $deleteHook != '' && function_exists($deleteHook) ) {
+            $deleteHook('delete', $this->id, $this->domain, $this->admin_username);
+        }
+
         db_log ('admin', 'delete_admin', $this->id); # TODO delete_admin is not a valid db_log keyword yet, and 'admin' is not displayed in viewlog.php
         $this->infomsg[] = Config::Lang_f('pDelete_delete_success', $this->id);
         return true;

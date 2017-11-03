@@ -307,6 +307,12 @@ class MailboxHandler extends PFAHandler {
         db_delete('alias',                  'address',       $this->id);
         db_delete($this->db_table,          $this->id_field, $this->id); # finally delete the mailbox
 
+        # delete hook if it exists
+        $deleteHook = Config::read($this->db_table . '_delete_hook');
+        if ($deleteHook != 'NO' && $deleteHook != '' && function_exists($deleteHook) ) {
+            $deleteHook('delete', $this->id, $this->domain, $this->admin_username);
+        }
+
         if ( !$this->mailbox_postdeletion() ) {
             $this->error_msg[] = Config::Lang('mailbox_postdel_failed');
         }
@@ -316,7 +322,6 @@ class MailboxHandler extends PFAHandler {
         $this->infomsg[] = Config::Lang_f('pDelete_delete_success', $this->id);
         return true;
     }
-
 
 
     protected function _prefill_domain($field, $val) {
