@@ -298,6 +298,42 @@ $CONF['mailbox_struct_hook']        = '';
 $CONF['alias_domain_struct_hook']   = '';
 $CONF['fetchmail_struct_hook']      = '';
 
+/*
+ * Hooks for actions in table
+ * list of action (see $actionNames in PFAHandler)
+ * is  'create', 'delete', 'change', 'changePassword'
+ * $CONF['<db_table>_<action>_hook'] =
+ *
+    Example:
+
+function x_mailbox_action_hook($action, $user_id, $user_domain, $admin_user) {
+    $fTo = smtp_get_admin_email();
+    $fFrom = smtp_get_admin_email();
+    if(empty($fFrom) || $fFrom == 'CLI') $fFrom = $user_id;
+    $fSubject = '[Courriel] '.$action.' '.$user_id;
+    switch ($action) {
+        case 'create':
+            $fBody = 'New mail on '.$user_domain.":\n";
+            break;
+        case 'delete':
+            $fBody = 'Delete mail on '.$user_domain.":\n";
+            break;
+        case 'change':
+            $fBody = 'Change about mail on '.$user_domain.":\n";
+            break;
+        case 'changePassword':
+            $fBody = 'Change password for mail on '.$user_domain.":\n";
+            break;
+    }
+    $fBody .= "\tfor ".$user_id.' made by '.$admin_user."\n";
+
+    smtp_mail ($fTo, $fFrom, $fSubject, $fBody);
+}}
+*/
+$CONF['mailbox_create_hook']            = '';
+$CONF['mailbox_delete_hook']            = '';
+$CONF['mailbox_change_hook']            = '';
+$CONF['mailbox_changePassword_hook']    = '';
 
 // Default Domain Values
 // Specify your default values below. Quota in MB.
