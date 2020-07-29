@@ -1,5 +1,9 @@
-<?php if( !defined('POSTFIXADMIN') ) die( "This file cannot be used standalone." ); ?>
 <?php
+if( !defined('POSTFIXADMIN') ) die( "This file cannot be used standalone." );
+
+if( !isset($CONF) || !is_array($CONF) ) {
+    die("Configuration not loaded. Check " . __FILE__);
+}
 @header ("Expires: Sun, 16 Mar 2003 05:00:00 GMT");
 @header ("Last-Modified: " . gmdate ("D, d M Y H:i:s") . " GMT");
 @header ("Cache-Control: no-store, no-cache, must-revalidate");
@@ -13,6 +17,11 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <?php
+if (file_exists (realpath ("../".$CONF['theme_favicon']))) {
+    print "<link rel=\"shortcut icon\" href=\"../".htmlentities($CONF['theme_favicon'])."\" />\n";
+} else {
+    print "<link rel=\"shortcut icon\" href=\"".htmlentities($CONF['theme_favicon'])."\" />\n";
+}
 if (file_exists (realpath ("../".$CONF['theme_css']))) {
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"../".htmlentities($CONF['theme_css'])."\" />\n";
 } else {

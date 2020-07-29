@@ -6,6 +6,58 @@
 #
 # Further details on the project are available at http://postfixadmin.sf.net
 
+Version X.X - master
+-------------------------------------------------
+   - Improve vacation.pl (better utf-8 support)
+   - Improve DB connections (PDO, SSL)
+   - Add sha512.b64 password hash support (see https://github.com/postfixadmin/postfixadmin/issues/58)
+   - Add support for password expiration (see https://github.com/postfixadmin/postfixadmin/pull/200 and README.password_expiration )
+   - Improve ADDITIONS/postfixadmin-mailbox-postcreate.sh
+   - Add Date header into smtp_from() (see https://github.com/postfixadmin/postfixadmin/issues/203 )
+   - PostgreSQL fixes ( 1e158245d613fd1d8d5c1d59e26e940eb71f5b32 )
+   - vacation.pl fixes (perl libraries; see https://github.com/postfixadmin/postfixadmin/pull/194 )
+   - Add bootstrap theme (default not changed yet) ( see https://github.com/postfixadmin/postfixadmin/pull/172 )
+   - Improve CSV export from list.php
+   - Various misc. changes from static analysis (psalm)
+   - Update installation instructions. (see: https://github.com/postfixadmin/postfixadmin/issues/189 https://github.com/postfixadmin/postfixadmin/issues/188 )
+   - Encryption improvements (see: php_crypt / encrypt_difficulty in sample config)
+   - Sqlite improvements (see https://github.com/postfixadmin/postfixadmin/issues/177 and https://github.com/postfixadmin/postfixadmin/issues/176 )
+   - MySQL 8 compatibility (see https://github.com/postfixadmin/postfixadmin/pull/175 )
+   - Internally the database functions have been refactored to use PDO rather than the lower level mysql_, mysqli_, pg_ etc functions. ( see: https://github.com/postfixadmin/postfixadmin/pull/231 )
+   - Usage of dovecot deliver as fetchmail mda
+
+Version 3.2 - 2018/05/02
+-------------------------------------------------
+
+  - move public facing stuff into public/, this allows us to stop exposing
+    templates_c/ etc. to the world (but also means you'll need to adjust your
+    webserver config)
+  - enable users to reset their passwords by mail or SMS
+    ($CONF['forgotten_user_password_reset'],
+    $CONF['forgotten_admin_password_reset'], $CONF['sms_send_function'])
+  - allow local alias targets (without @domain) - see #134
+  - add $CONF['edit_alias'] to disable "edit_alias" function for users
+  - add php_crypt $CONF["encrypt"] option (see #170 for examples)
+  - add random_compat phar (see: https://github.com/paragonie/random_compat) to
+    support random_int()/random_string() in older PHP versions.
+  - add support for MySQL connections over SSL
+  - language updates: sk, ja, nl, bg, fr, cz
+  - update bundled smarty library (lib/smarty to 3.1.32; includes security fixes)
+  - split up pacrypt() into different functions; add some minimal test coverage
+  - add id autoincrement field to log table (#89)
+  - add token to login.php to prevent CSRF
+  - lots of bugfixes and code cleanup
+  - drop unused code in postfixadmin-cli
+  - introduce PHP-CS-Fixer to enforce code style
+  - vacation.pl:
+    - avoid answering to more known autoresponders
+    - add $no_vacation_pattern to avoid sending autoresponders based on the To:
+      address
+    - replace Deprecated Mail::Sender by Email::Sender
+    - use MIME:EncWords
+    - remove unused MIME::Base64
+  - add docker repo, see https://github.com/postfixadmin/docker
+
 Version 3.1 - 2017/06/25
 -------------------------------------------------
 

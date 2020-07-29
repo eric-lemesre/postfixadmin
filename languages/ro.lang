@@ -141,10 +141,15 @@ $PALANG['pEdit_alias_forward_only'] = 'Redirectioneaza numai catre adresa de mai
 $PALANG['pEdit_alias_result_error'] = 'Modificarea aliasului %s a esuat!';
 
 $PALANG['pCreate_mailbox_welcome'] = 'Creaza o noua casuta de mail.';
+$PALANG['pCreate_mailbox_local_part_error'] = 'Should be the bit before the @ sign.'; # XXX
 $PALANG['pCreate_mailbox_username_text_error1'] = 'EMAIL nu este valid!';
 $PALANG['pCreate_mailbox_username_text_error3'] = 'Ati atins limita pentru creare de noi casute de mail!';
 $PALANG['pCreate_mailbox_password_text'] = 'Parola de la POP3/IMAP';
 $PALANG['pCreate_mailbox_name_text'] = 'Numele complet';
+$PALANG['pCreate_mailbox_phone'] = 'Mobile phone'; # XXX
+$PALANG['pCreate_mailbox_phone_desc'] = "Used to send a SMS if the password is forgotten"; # XXX
+$PALANG['pCreate_mailbox_email'] = 'Other e-mail'; # XXX
+$PALANG['pCreate_mailbox_email_desc'] = "Used if the password is forgotten"; # XXX
 $PALANG['pCreate_mailbox_mail'] = 'Trimite mesaj de intampinare';
 $PALANG['pCreate_mailbox_result_error'] = 'Crearea casutei de mail %s a esuat!';
 $PALANG['pCreate_mailbox_result_success'] = 'Casuta de mail %s a fost adaugata cu succes.';
@@ -172,6 +177,13 @@ $PALANG['pPassword_password_text_error'] = 'Parolele nu sunt identice sau nu le-
 $PALANG['change_password'] = 'Schimbare parola';
 $PALANG['pPassword_result_error'] = 'Schimbarea parolei pentru %s a esuat!';
 $PALANG['pPassword_result_success'] = 'Parola pentru %s a fost schimbata.';
+$PALANG['pPassword_recovery_title'] = 'Follow the instructions to reset your password.'; # XXX
+$PALANG['pPassword_recovery_button'] = 'Send me the code'; # XXX
+$PALANG['pPassword_recovery_email_body'] = "Hello,\n\nUse the following link to change your email password :\n%s\n\nRegards,\n\n" . $CONF['admin_name']; # XXX
+$PALANG['pPassword_recovery_sms_body'] = "Hello,\nThe code to change your password is: %s\n" . $CONF['admin_name']; # XXX
+$PALANG['pPassword_recovery_processed'] = "We processed your request. If you entered a valid username, you'll receive an email/SMS with a password code."; # XXX
+$PALANG['pPassword_password_code'] = 'Code sent by email/SMS'; # XXX
+$PALANG['pPassword_code_text_error'] = 'Invalid code'; # XXX
 
 $PALANG['pEdit_vacation_set'] = 'Schimbare / Setare mesaj vacanta';
 $PALANG['pEdit_vacation_remove'] = 'Stergere mesaj vacanta';
@@ -297,6 +309,7 @@ $PALANG['pAdminEdit_admin_result_success'] = 'Contul de administrator %s a fost 
 $PALANG['pUsersLogin_welcome'] = 'Schimbare parola si alias-uri utilizatori';
 $PALANG['pUsersLogin_username_incorrect'] = 'Nume cont incorect. Verificati introducerea corecta a adresei de email!';
 $PALANG['pUsersLogin_password_incorrect'] = 'Parola incorecta!';
+$PALANG['pUsersLogin_password_recover'] = 'I forgot my password'; # XXX
 
 $PALANG['pUsersMenu_vacation'] = 'Raspuns automat';
 $PALANG['pUsersMenu_edit_alias'] = 'Redirectionare';
@@ -334,11 +347,14 @@ $PALANG['broadcast_mailboxes_only'] = 'Only send to mailboxes'; # XXX
 $PALANG['broadcast_to_domains'] = 'Send to domains:'; # XXX
 
 $PALANG['pStatus_undeliverable'] = 'probabil UNDELIVERABLE ';
+$PALANG['pStatus_disabled'] = 'Account disabled '; # XXX
+$PALANG['pStatus_expired'] = 'Password expired '; # XXX
+$PALANG['pStatus_vacation'] = 'Vacation enabled '; # XXX
 $PALANG['pStatus_custom'] = 'Livreaza la ';
 $PALANG['pStatus_popimap'] = 'POP/IMAP ';
 
 $PALANG['password_too_short'] = "Parola prea scurta - minim %s caractere";
-$PALANG['password_no_characters'] = "Parola trebuie sa contina cel putin %s litere.";
+$PALANG['password_no_characters'] = "Parola trebuie sa contina cel putin %s litere."; # XXX text changed to "Your password must contain at least %s letters (A-Z, a-z)."
 $PALANG['password_no_digits'] = "Parola trebuie sa contina cel putin %s cifre.";
 $PALANG['pInvalidDomainRegex'] = "Nume domeniu incorect %s, verificare regexp esuata";
 $PALANG['pInvalidDomainDNS'] = "Nume domeniu incorect %s, si/sau nu se poate rezolva in DNS";
@@ -358,6 +374,7 @@ $PALANG['pFetchmail_password_missing'] = 'Introduceti parola la distanta!';
 $PALANG['pFetchmail_field_id']              = 'ID';
 $PALANG['pFetchmail_field_mailbox']         = 'Casuta de mail';
 $PALANG['pFetchmail_field_src_server']      = 'Server';
+$PALANG['pFetchmail_field_src_port']        = 'Port'; # XXX
 $PALANG['pFetchmail_field_src_auth']        = 'Tip de autentificare';
 $PALANG['pFetchmail_field_src_user']        = 'User';
 $PALANG['pFetchmail_field_src_password']    = $PALANG['password']; # needed until fetchmail is migrated into FetchmailHandler
@@ -377,6 +394,7 @@ $PALANG['pFetchmail_field_returned_text']   = 'Text returnat';
 $PALANG['pFetchmail_desc_id']               = 'Inregistrare ID';
 $PALANG['pFetchmail_desc_mailbox']          = 'Casuta email locala';
 $PALANG['pFetchmail_desc_src_server']       = 'Server la distanta';
+$PALANG['pFetchmail_desc_src_port']         = 'Remote port number, if a non-standard remote port is needed. (0: use default)'; # XXX
 $PALANG['pFetchmail_desc_src_auth']         = 'Mostly \'password\''; # Translators: Please do NOT translate 'password' here
 $PALANG['pFetchmail_desc_src_user']         = 'Utilizator la distanta';
 $PALANG['pFetchmail_desc_src_password']     = 'Parola la distanta';
@@ -393,6 +411,8 @@ $PALANG['pFetchmail_desc_returned_text']    = 'Mesaj text';
 
 $PALANG['dateformat_pgsql'] = 'YYYY-mm-dd'; # translators: rearrange to your local date format, but make sure it's a valid PostgreSQL date format
 $PALANG['dateformat_mysql'] = '%Y-%m-%d';   # translators: rearrange to your local date format, but make sure it's a valid MySQL date format
+$PALANG['password_expiration'] = 'Pass expires'; # XXX
+$PALANG['password_expiration_desc'] = 'Date when password will expire'; # XXX
 
 $PALANG['please_keep_this_as_last_entry'] = ''; # needed for language-check.sh
 /* vim: set expandtab ft=php softtabstop=3 tabstop=3 shiftwidth=3: */

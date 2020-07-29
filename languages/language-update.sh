@@ -21,7 +21,7 @@
 
 function update_string_list() {
 	for file in en.lang $filelist ; do
-		echo "<?php include('$file'); print join(\"\\n\", array_keys(\$PALANG)) . \"\\n\"; ?>" | php > $file.strings
+		echo "<?php \$CONF['admin_name'] = ''; include('$file'); print join(\"\\n\", array_keys(\$PALANG)) . \"\\n\"; ?>" | php > $file.strings
 	done
 
 	for file in $filelist ; do
@@ -74,7 +74,7 @@ function forcepatch() {
 	for i in `seq 1 5` ; do 
 		for file in $filelist ; do
 			test "$file" = "en.lang" && { echo "*** skipping en.lang ***"; continue ; } >&2
-			"$0" "$file" | sed -n '1,3 p ; 5 s/^./-/p ; 5s/^./+/p ;  6p'  | recountdiff | patch "$file"
+			/bin/bash "$0" "$file" | sed -n '1,3 p ; 5 s/^./-/p ; 5s/^./+/p ;  6p'  | recountdiff | patch "$file"
 		done
 	done
 } # end forcepatch

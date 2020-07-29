@@ -30,7 +30,7 @@ use Email::Simple::Creator;
 use Try::Tiny;
 use Log::Log4perl qw(get_logger :levels);
 use File::Basename;
-
+use Net::DNS;
 # ========== begin configuration ==========
 
 # IMPORTANT: If you put passwords into this script, then remember
@@ -51,23 +51,18 @@ our $db_name     = 'postfix';
 
 our $vacation_domain = 'autoreply.example.org';
 
-# smtp server used to send vacation e-mails
-our $smtp_server = 'localhost';
+our $recipient_delimiter = '+';
+
 # port to connect to; defaults to 25 for non-SSL, 465 for 'ssl', 587 for 'starttls'
 our $smtp_server_port = 25;
 
 # this is the helo we [the vacation script] use on connection; you may need to change this to your hostname or something,
-# depending upon what smtp helo restrictions you have in place within Postfix. 
+# depending upon what smtp helo restrictions you have in place within Postfix.
 our $smtp_client = 'localhost';
 
 # send mail encrypted or plaintext
 # if 'starttls', use STARTTLS; if 'ssl' (or 1), connect securely; otherwise, no security
 our $smtp_ssl = 'starttls';
-
-# passed to Net::SMTP constructor for 'ssl' connections or to starttls for 'starttls' connections; should contain extra options for IO::Socket::SSL
-our $ssl_options = {
-    SSL_verifycn_name => $smtp_server
-};
 
 # maximum time in secs to wait for server; default is 120
 our $smtp_timeout = '120';
@@ -83,7 +78,6 @@ our $smtp_authpwd = '';
 # If you specify something here you'd instead see something like :
 # From: Some Friendly Name <original@recipient.domain>
 our $friendly_from = '';
-
 
 # Set to 1 to enable logging to syslog.
 our $syslog = 0;
@@ -183,6 +177,7 @@ if($test_mode == 1) {
         my $syslog_appender = Log::Log4perl::Appender->new(
             'Log::Dispatch::Syslog',
             facility => 'mail',
+            ident => 'vacation',
         );
         $logger->add_appender($syslog_appender);
     }
@@ -217,6 +212,7 @@ if ($db_type eq 'mysql') {
     $db_true = '1';
 } else { # Pg
     $dbh->do("SET CLIENT_ENCODING TO 'UTF8'");
+    $dbh->{pg_enable_utf8} = 1;
     $db_true = 'True';
 }
 
@@ -285,7 +281,7 @@ sub already_notified {
             if ($db_type eq 'Pg') {
                 $query = qq{SELECT extract( epoch from (NOW()-notified_at))::int FROM vacation_notification WHERE on_vacation=? AND notified=?};
             } else { # mysql
-                $query = qq{SELECT NOW()-notified_at FROM vacation_notification WHERE on_vacation=? AND notified=?};
+                $query = qq{SELECT UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(notified_at) FROM vacation_notification WHERE on_vacation=? AND notified=?};
             }
             $stm = $dbh->prepare($query) or panic_prepare($query);
             $stm->execute($to,$from) or panic_execute($query,"on_vacation='$to', notified='$from'");
@@ -442,8 +438,9 @@ sub send_vacation_email {
         }
 
         $logger->debug("Will send vacation response for $orig_messageid: FROM: $email (orig_to: $orig_to), TO: $orig_from; VACATION SUBJECT: $row[0] ; VACATION BODY: $row[1]");
-
+	
         my $subject = $row[0];
+        $subject = Encode::decode_utf8( $subject ) if( !Encode::is_utf8( $subject ) );
         $orig_subject = decode("mime-header", $orig_subject);
         $subject =~ s/\$SUBJECT/$orig_subject/g;
         if ($subject ne $row[0]) {
@@ -451,13 +448,31 @@ sub send_vacation_email {
         }
 
         my $body = $row[1];
+        $body = Encode::decode_utf8( $body ) if( !Encode::is_utf8( $body ) );
+
         my $from = $email;
         my $to = $orig_from;
+
+        # part of the username in the email && part of the domain in the email
+        my ($email_username_part, $email_domain_part) = split(/@/, $email);
+
+        my $resolver  = Net::DNS::Resolver->new;
+        my @mx   = mx($resolver, $email_domain_part);
+        my $smtp_server; 
+        if (@mx) {
+            $smtp_server = @mx[0]->exchange;
+            $logger->debug("Found MX record <$smtp_server> for user <$email>!");
+        } else {
+            $logger->error("Unable to find MX record for user <$email>, error message: ".$resolver->errorstring);
+            exit(0); 
+        }
 
         my $smtp_params = {
             host => $smtp_server,
             port => $smtp_server_port,
-            ssl_options => $ssl_options,
+            ssl_options => {
+                SSL_verifycn_name => $smtp_server
+            },
             ssl  => $smtp_ssl,
             timeout => $smtp_timeout,
             localaddr => $smtp_client,
@@ -472,6 +487,8 @@ sub send_vacation_email {
 
         my $transport = Email::Sender::Transport::SMTP->new($smtp_params);
 
+	$subject = Encode::encode_utf8( $subject ) if( Encode::is_utf8( $subject ) );
+	$body = Encode::encode_utf8( $body ) if( Encode::is_utf8( $body ) );
         $email = Email::Simple->create(
             header => [
                 To      => $to,
@@ -600,6 +617,8 @@ while (<STDIN>) {
     elsif (/^(x\-(anti|avas\-)?virus\-status):\s+(infected)/i) { $logger->debug("$1: $3 found; exiting"); exit (0); }
     elsif (/^(x\-(avas\-spam|spamtest|crm114|razor|pyzor)\-status):\s+(spam)/i) { $logger->debug("$1: $3 found; exiting"); exit (0); }
     elsif (/^(x\-osbf\-lua\-score):\s+[0-9\/\.\-\+]+\s+\[([-S])\]/i) { $logger->debug("$1: $2 found; exiting"); exit (0); }
+    elsif (/^x\-autogenerated:\s*reply/i) { $logger->debug('x-autogenerated found; exiting'); exit (0); }
+    elsif (/^x\-auto\-response\-suppress:\s*oof/i) { $logger->debug('x-auto-response-suppress: oof found; exiting'); exit (0); }
     else {$lastheader = '' ; }
 }
 
@@ -608,6 +627,9 @@ if($smtp_recipient =~ /\@$vacation_domain/) {
     my $tmp = $smtp_recipient;
     $tmp =~ s/\@$vacation_domain//;
     $tmp =~ s/#/\@/;
+    if ($recipient_delimiter) {
+        $tmp =~ s/[\Q$recipient_delimiter\E].+$//;
+    }
     $logger->debug("Converted autoreply mailbox back to normal style - from $smtp_recipient to $tmp");
     $smtp_recipient = $tmp;
     undef $tmp;

@@ -44,7 +44,7 @@ $PALANG['pLogin_username'] = 'Login (email)';
 $PALANG['password'] = 'Password';
 $PALANG['pLogin_language'] = 'Language';
 $PALANG['pLogin_button'] = 'Login';
-$PALANG['pLogin_failed'] = 'Your email address or password are not correct.';
+$PALANG['pLogin_failed'] = 'Your email address or password is not correct.';
 $PALANG['pLogin_login_users'] = 'Users click here to login to the user section.';
 
 $PALANG['pMenu_main'] = 'Main';
@@ -142,6 +142,7 @@ $PALANG['pEdit_alias_forward_only'] = 'Forward to given email addresses only.';
 $PALANG['pEdit_alias_result_error'] = 'Modifying the alias %s failed!';
 
 $PALANG['pCreate_mailbox_welcome'] = 'Create a new mailbox for your domain.';
+$PALANG['pCreate_mailbox_local_part_error'] = 'Should be the bit before the @ sign.';
 $PALANG['pCreate_mailbox_username_text_error1'] = 'The EMAIL is not valid!';
 $PALANG['pCreate_mailbox_username_text_error3'] = 'You have reached your limit to create mailboxes!';
 $PALANG['pCreate_mailbox_password_text'] = 'Password for POP3/IMAP';
@@ -348,11 +349,15 @@ $PALANG['broadcast_mailboxes_only'] = 'Only send to mailboxes';
 $PALANG['broadcast_to_domains'] = 'Send to domains:';
 
 $PALANG['pStatus_undeliverable'] = 'maybe UNDELIVERABLE ';
+$PALANG['pStatus_disabled'] = 'Account disabled ';
+$PALANG['pStatus_expired'] = 'Password expired ';
+$PALANG['pStatus_vacation'] = 'Vacation enabled ';
+
 $PALANG['pStatus_custom'] = 'Delivers to ';
 $PALANG['pStatus_popimap'] = 'POP/IMAP ';
 
 $PALANG['password_too_short'] = "Password is too short - requires %s characters";
-$PALANG['password_no_characters'] = "Your password must contain at least %s character(s).";
+$PALANG['password_no_characters'] = "Your password must contain at least %s letters (A-Z, a-z).";
 $PALANG['password_no_digits'] = "Your password must contain at least %s digit(s).";
 $PALANG['pInvalidDomainRegex'] = "Invalid domain name %s, fails regexp check";
 $PALANG['pInvalidDomainDNS'] = "Invalid domain %s, and/or not discoverable in DNS";
@@ -372,6 +377,7 @@ $PALANG['pFetchmail_password_missing'] = 'Please enter the remote password!';
 $PALANG['pFetchmail_field_id']              = 'ID';
 $PALANG['pFetchmail_field_mailbox']         = 'Mailbox';
 $PALANG['pFetchmail_field_src_server']      = 'Server';
+$PALANG['pFetchmail_field_src_port']        = 'Port';
 $PALANG['pFetchmail_field_src_auth']        = 'Auth Type';
 $PALANG['pFetchmail_field_src_user']        = 'User';
 $PALANG['pFetchmail_field_src_password']    = $PALANG['password']; # needed until fetchmail is migrated into FetchmailHandler
@@ -391,6 +397,7 @@ $PALANG['pFetchmail_field_returned_text']   = 'Returned Text';
 $PALANG['pFetchmail_desc_id']               = 'Record ID';
 $PALANG['pFetchmail_desc_mailbox']          = 'Local mailbox';
 $PALANG['pFetchmail_desc_src_server']       = 'Remote Server';
+$PALANG['pFetchmail_desc_src_port']         = 'Remote port number, if a non-standard remote port is needed. (0: use default)';
 $PALANG['pFetchmail_desc_src_auth']         = 'Mostly \'password\''; # Translators: Please do NOT translate 'password' here
 $PALANG['pFetchmail_desc_src_user']         = 'Remote User';
 $PALANG['pFetchmail_desc_src_password']     = 'Remote Password';
@@ -407,6 +414,8 @@ $PALANG['pFetchmail_desc_returned_text']    = 'Text message from last polling';
 
 $PALANG['dateformat_pgsql'] = 'YYYY-mm-dd'; # translators: rearrange to your local date format, but make sure it's a valid PostgreSQL date format
 $PALANG['dateformat_mysql'] = '%Y-%m-%d';   # translators: rearrange to your local date format, but make sure it's a valid MySQL date format
+$PALANG['password_expiration'] = 'Pass expires';
+$PALANG['password_expiration_desc'] = 'Date when password will expire';
 
 $PALANG['please_keep_this_as_last_entry'] = ''; # needed for language-check.sh
 /* vim: set expandtab ft=php softtabstop=3 tabstop=3 shiftwidth=3: */

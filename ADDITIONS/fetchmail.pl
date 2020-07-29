@@ -26,6 +26,15 @@ our $db_username="mail";
 # database password
 our $db_password="CHANGE_ME!";
 
+# Where to create a lockfile; please ensure path exists.
+our $run_dir="/var/lock/fetchmail";
+
+# in case you want to use dovecot deliver to put the mail directly into the users mailbox,
+# set "mda" in the fetchmail table to the keyword "dovecot".
+
+# Where the delivery binary is located
+$dovecot_deliver = "/usr/lib/dovecot/deliver";
+
 # instead of changing this script, you can put your settings to /etc/mail/postfixadmin/fetchmail.conf
 # just use perl syntax there to fill the variables listed above (without the "our" keyword). Example:
 # $db_username = 'mail';
@@ -40,7 +49,7 @@ if (-f "/etc/mail/postfixadmin/fetchmail.conf") {
 openlog("fetchmail-all", "pid", "mail");
 
 sub log_and_die {
-	my($message) = @_;
+  my($message) = @_;
   syslog("err", $message);
   die $message;
 }
@@ -59,8 +68,6 @@ while ($_ = shift @ARGS1) {
     }
 }
 
-$run_dir="/var/run/fetchmail";
-
 # use specified config file
 if (-e $configfile) {
     do $configfile;
@@ -70,6 +77,10 @@ if($db_type eq "Pg" || $db_type eq "mysql") {
 	$dsn = "DBI:$db_type:database=$db_name;host=$db_host";
 } else {
 	log_and_die "unsupported db_type $db_type";
+}
+
+if(!-d $run_dir) {
+    log_and_die("Please create: $run_dir");
 }
 
 $lock_file=$run_dir . "/fetchmail-all.lock";
@@ -100,7 +111,14 @@ map{
 
 	$cmd="user '${src_user}' there with password '".decode_base64($src_password)."'";
 	$cmd.=" folder '${src_folder}'" if ($src_folder);
-	$cmd.=" mda ".$mda if ($mda);
+
+	if ($mda) {
+		if ($mda eq "dovecot") {
+			$cmd.=" mda \"${dovecot_deliver} -d ${mailbox}\" ";
+		} else {
+			$cmd.=" mda ".$mda 
+		}
+	}
 
 #	$cmd.=" mda \"/usr/local/libexec/dovecot/deliver -m ${mailbox}\"";
 	$cmd.=" is '${mailbox}' here";
@@ -120,10 +138,11 @@ set no spambounce
 set properties ""
 set syslog
 
-poll ${src_server} with proto ${protocol}
-	$cmd
-
 TXT
+    $text.="poll ${src_server} with proto ${protocol}";
+    $text.=" service ${src_port}" if ($src_port);
+    $text.="\n	$cmd";
+
 
   ($file_handler, $filename) = mkstemp( "/tmp/fetchmail-all-XXXXX" ) or log_and_die "cannot open/create fetchmail temp file";
   print $file_handler $text;

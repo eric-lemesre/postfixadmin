@@ -32,6 +32,7 @@ MIME::EncWords
 Log::Log4perl
 Log::Dispatch
 GetOpt::Std
+Net::DNS;
 ```
 
 You may install these via CPAN, or through your package tool.
@@ -43,7 +44,7 @@ CPAN: 'perl -MCPAN -e shell', then 'install Module::Whatever'
 
 
 ```bash
-  apt-get install libemail-sender-perl libemail-simple-perl libemail-valid-perl libtry-tiny-perl libdbd-pg-perl libmime-perl liblog-log4perl-perl liblog-dispatch-perl libgetopt-argvfile-perl libmime-charset-perl libmime-encwords-perl libmime-encwords-perl 
+  apt-get install libemail-sender-perl libemail-simple-perl libemail-valid-perl libtry-tiny-perl libdbd-pg-perl libemail-mime-perl liblog-log4perl-perl liblog-dispatch-perl libgetopt-argvfile-perl libmime-charset-perl libmime-encwords-perl libnet-dns-perl
 ```
 
 and one of : 
@@ -173,6 +174,7 @@ b) create /etc/postfixadmin/vacation.conf and enter your settings there
    (without the "our" keyword). Example:
 ```perl
 $db_username = 'mail';
+1; # required final line - keeps perl happy.
 ```
 
    To make sure nobody except vacation.pl can read your vacation.conf (including the

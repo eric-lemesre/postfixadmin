@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+
 /**
  * Command-line code generation utility to automate administrator tasks.
  *
@@ -38,26 +39,26 @@ class PostfixAdmin {
      *
      * @var string
      */
-    public $version ='0.2';
+    public $version ='0.3';
 
     /**
      * Standard input stream.
      *
-     * @var filehandle
+     * @var resource
      */
     public $stdin;
 
     /**
      * Standard output stream.
      *
-     * @var filehandle
+     * @var resource
      */
     public $stdout;
 
     /**
      * Standard error stream.
      *
-     * @var filehandle
+     * @var resource
      */
     public $stderr;
 
@@ -80,28 +81,28 @@ class PostfixAdmin {
      *
      * @var string
      */
-    public $shell = null;
+    public $shell;
 
     /**
      * The class name of the shell that was invoked.
      *
      * @var string
      */
-    public $shellClass = null;
+    public $shellClass;
 
     /**
      * The command called if public methods are available.
      *
      * @var string
      */
-    public $shellCommand = null;
+    public $shellCommand;
 
     /**
      * The name of the shell in camelized.
      *
      * @var string
      */
-    public $shellName = null;
+    public $shellName;
 
     /**
      * Constructor
@@ -120,35 +121,19 @@ class PostfixAdmin {
      */
     private function __initConstants() {
         ini_set('display_errors', '1');
-        ini_set('error_reporting', E_ALL);
-        ini_set('html_errors', false);
-        ini_set('implicit_flush', true);
-        ini_set('max_execution_time', 0);
-
-        define('DS', DIRECTORY_SEPARATOR);
-        define('CORE_INCLUDE_PATH', dirname(__FILE__));
-        define('CORE_PATH', dirname(CORE_INCLUDE_PATH) ); # CORE_INCLUDE_PATH/../
-
-        if(!defined('POSTFIXADMIN')) { # already defined if called from setup.php
-            define('POSTFIXADMIN', 1); # checked in included files
-        }
+        ini_set('error_reporting', '' . E_ALL);
+        ini_set('html_errors', "0");
+        ini_set('implicit_flush', "1");
+        ini_set('max_execution_time', "0");
     }
 
     /**
      * Defines current working environment.
      */
     private function __initEnvironment() {
-        $this->stdin = fopen('php://stdin', 'r');
+        $this->stdin  = fopen('php://stdin', 'r');
         $this->stdout = fopen('php://stdout', 'w');
         $this->stderr = fopen('php://stderr', 'w');
-
-        if (!$this->__bootstrap()) {
-            $this->stderr("");
-            $this->stderr("Unable to load.");
-            $this->stderr("\tMake sure /config.inc.php exists in " . PATH);
-            exit(1);
-        }
-
 
         if (basename(__FILE__) !=  basename($this->args[0])) {
             $this->stderr('Warning: the dispatcher may have been loaded incorrectly, which could lead to unexpected results...');
@@ -161,43 +146,17 @@ class PostfixAdmin {
     }
 
     /**
-     * Initializes the environment and loads the Cake core.
-     *
-     * @return boolean Success.
-     */
-    private function __bootstrap() {
-        if ($this->params['webroot'] != '' ) {
-            define('PATH', $this->params['webroot'] );
-        } else {
-            define('PATH', CORE_PATH);
-        }
-
-        if (!file_exists(PATH)) {
-            $this->stderr( PATH . " don't exists");
-            return false;
-        }
-
-        # make sure global variables fron functions.inc.php end up in the global namespace, instead of being local to this function
-        global $version, $min_db_version;
-
-        if (!require_once(PATH . '/common.php')) {
-            $this->stderr("Failed to load " . PATH . '/common.php');
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Dispatches a CLI request
+     * postfixadmin-cli admin view admin@example.com
+     *              - Create AdminHandler.
+     *              - and then a CliView object (Shell class)
+     *              - call CliView->view() ... which under the covers uses AdminHandler*
      */
     public function dispatch() {
-        $CONF = Config::read('all');
-
         check_db_version(); # ensure the database layout is up to date
 
         if (!isset($this->args[0])) {
             $this->help();
-            return;
+            return 1;
         }
 
         $this->shell = $this->args[0];
@@ -208,16 +167,10 @@ class PostfixAdmin {
 
         if ($this->shell == 'help') {
             $this->help();
-            return;
+            return 1;
         }
-        # TODO: move shells/shell.php to model/ to enable autoloading
-        if (!class_exists('Shell')) {
-            require CORE_INCLUDE_PATH . DS . "shells" . DS . 'shell.php';
-        }
-        $command = 'help'; # not the worst default ;-)
-        if (isset($this->args[0])) {
-            $command = $this->args[0];
-        }
+
+        $command = $this->args[0];
 
         $this->shellCommand = $command;
         $this->shellClass = 'Cli' . ucfirst($command);
@@ -228,7 +181,7 @@ class PostfixAdmin {
 
         if (!class_exists($this->shellClass)) {
             $this->stderr('Unknown task ' . $this->shellCommand);
-            return;
+            return 1;
         }
 
         $shell = new $this->shellClass($this);
@@ -237,7 +190,7 @@ class PostfixAdmin {
 
         if (!class_exists($shell->handler_to_use)) {
             $this->stderr('Unknown module ' . $this->shell);
-            return;
+            return 1;
         }
 
         $task = ucfirst($command);
@@ -250,8 +203,6 @@ class PostfixAdmin {
         # TODO: add a way to Cli* to signal if the selected handler is supported (for example, not all *Handler support changing the password)
 
         if (strtolower(get_parent_class($shell)) == 'shell') {
-            $shell->initialize();
-
             $handler = new $shell->handler_to_use;
             if (in_array($task, $handler->taskNames)) {
                 $this->shiftArgs();
@@ -260,14 +211,14 @@ class PostfixAdmin {
                 if (isset($this->args[0]) && $this->args[0] == 'help') {
                     if (method_exists($shell, 'help')) {
                         $shell->help();
-                        exit();
+                        return 1;
                     } else {
                         $this->help();
+                        return 1;
                     }
                 }
 
-                $shell->execute();
-                return;
+                return $shell->execute();
             }
         }
 
@@ -283,11 +234,8 @@ class PostfixAdmin {
         }
 
         $protectedCommands = array(
-            'initialize','in','out','err','hr',
-            'createfile', 'isdir','copydir','object','tostring',
-            'requestaction','log','cakeerror', 'shelldispatcher',
-            '__initconstants','__initenvironment','__construct',
-            'dispatch','__bootstrap','getinput','stdout','stderr','parseparams','shiftargs'
+            'in', 'out', 'err', 'hr', 'log',
+            '__construct', 'dispatch', 'stdout', 'stderr'
         );
 
         if (in_array(strtolower($command), $protectedCommands)) {
@@ -296,13 +244,14 @@ class PostfixAdmin {
 
         if ($missingCommand && method_exists($shell, 'main')) {
             $shell->startup();
-            $shell->main();
+            return $shell->main();
         } elseif (!$privateMethod && method_exists($shell, $command)) {
             $this->shiftArgs();
             $shell->startup();
-            $shell->{$command}();
+            return $shell->{$command}();
         } else {
             $this->stderr("Unknown {$this->shellName} command '$command'.\nFor usage, try 'postfixadmin-cli {$this->shell} help'.\n\n");
+            return 1;
         }
     }
 
@@ -312,7 +261,7 @@ class PostfixAdmin {
      * @param string $prompt Prompt text.
      * @param mixed $options Array or string of options.
      * @param string $default Default input value.
-     * @return Either the default value, or the user-provided input.
+     * @return string Either the default value, or the user-provided input.
      */
     public function getInput($prompt, $options = null, $default = null) {
         if (!is_array($options)) {
@@ -328,7 +277,7 @@ class PostfixAdmin {
         }
         $result = fgets($this->stdin);
 
-        if ($result === false){
+        if ($result === false) {
             exit(1);
         }
         $result = trim($result);
@@ -368,51 +317,21 @@ class PostfixAdmin {
      * @param array $params Parameters to parse
      */
     public function parseParams($params) {
-        $this->__parseParams($params);
-
-        $defaults = array('webroot' => CORE_PATH);
-
-        $params = array_merge($defaults, array_intersect_key($this->params, $defaults));
-
-        $isWin = array_filter(array_map('strpos', $params, array('\\')));
-
-        $params = str_replace('\\', '/', $params);
-
-
-        if (!empty($matches[0]) || !empty($isWin)) {
-            $params = str_replace('/', '\\', $params);
-        }
-
-        $this->params = array_merge($this->params, $params);
-    }
-
-    /**
-     * Helper for recursively paraing params
-     *
-     * @return array params
-     */
-    private function __parseParams($params) {
         $count = count($params);
         for ($i = 0; $i < $count; $i++) {
-            if (isset($params[$i])) {
-                if ($params[$i] != '' && $params[$i]{0} === '-') {
-                    $key = substr($params[$i], 1);
-                    $this->params[$key] = true;
-                    unset($params[$i]);
-                    if (isset($params[++$i])) {
-                        # TODO: ideally we should know if a parameter can / must have a value instead of whitelisting known valid values starting with '-' (probably only bool doesn't need a value)
-                        if ($params[$i]{0} !== '-' or $params[$i] != '-1') {
-                            $this->params[$key] = $params[$i];
-                            unset($params[$i]);
-                        } else {
-                            $i--;
-                            $this->__parseParams($params);
-                        }
+            if ($params[$i] != '' && $params[$i]{0} === '-' && $params[$i] != '-1') {
+                $key = substr($params[$i], 1);
+                if (isset($params[$i+1])) {
+                    # TODO: ideally we should know if a parameter can / must have a value instead of whitelisting known valid values starting with '-' (probably only bool doesn't need a value)
+                    if ($params[$i+1]{0} === '-' && $params[$i+1] != '-1') {
+                        $this->params[$key] = true;
+                    } else {
+                        $this->params[$key] = $params[$i+1];
+                        $i++;
                     }
-                } else {
-                    $this->args[] = $params[$i];
-                    unset($params[$i]);
                 }
+            } else {
+                $this->args[] = $params[$i];
             }
         }
     }
@@ -442,7 +361,7 @@ class PostfixAdmin {
         $this->stdout("");
         $this->stdout("Available modules:");
 
-        $modules = explode(',','admin,domain,mailbox,alias,aliasdomain,fetchmail');
+        $modules = explode(',', 'admin,domain,mailbox,alias,aliasdomain,fetchmail');
         foreach ($modules as $module) {
             $this->stdout("    $module");
         }
@@ -466,17 +385,21 @@ class PostfixAdmin {
         $this->stdout("");
 
         exit();
-
     }
 }
 
 
-define ("POSTFIXADMIN_CLI", 1);
+define("POSTFIXADMIN_CLI", 1);
+
+require_once(dirname(__FILE__) . '/../common.php');
 
 $dispatcher = new PostfixAdmin($argv);
-
-$CONF = Config::read('all');
-
-$dispatcher->dispatch();
+try {
+    $retval = $dispatcher->dispatch();
+} catch (Exception $e) {
+    $dispatcher->stderr("Execution Exception: " . $e->getMessage());
+    $retval = 1;
+}
+exit($retval);
 
 /* vim: set expandtab softtabstop=4 tabstop=4 shiftwidth=4: */
